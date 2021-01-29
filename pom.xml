@@ -13,7 +13,7 @@
     <properties>
         <!-- Build properties -->
         <maven.version>3.3.9</maven.version>
-        <java.version>11</java.version>
+        <java.version>1.8</java.version>
         <node.version>v12.16.1</node.version>
         <npm.version>6.14.5</npm.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -295,6 +295,16 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-config-monitor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-bus-kafka</artifactId>
+        </dependency>
         <!-- jhipster-needle-maven-add-dependency -->
     </dependencies>
 
@@ -398,7 +408,7 @@
                     <configuration>
                         <source>${java.version}</source>
                         <target>${java.version}</target>
-                        <release>${java.version}</release>
+<!--                        <release>${java.version}</release>-->
                         <annotationProcessorPaths>
                             <path>
                                 <groupId>org.springframework.boot</groupId>
@@ -555,7 +565,7 @@
                             <image>adoptopenjdk:11-jre-hotspot</image>
                         </from>
                         <to>
-                            <image>jhipster-registry:latest</image>
+                            <image>nrvmodi/jhipster-registry-cloud-bus:latest</image>
                         </to>
                         <container>
                             <entrypoint>
@@ -929,6 +939,98 @@
             <properties>
                 <!-- default Spring profiles -->
                 <spring.profiles.active>prod${profile.swagger}${profile.tls}</spring.profiles.active>
+            </properties>
+        </profile>
+        <profile>
+            <id>aws-ecs</id>
+            <dependencies>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-undertow</artifactId>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-clean-plugin</artifactId>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>target/classes/static/</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>build-info</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.eirslett</groupId>
+                        <artifactId>frontend-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>install node and npm</id>
+                                <goals>
+                                    <goal>install-node-and-npm</goal>
+                                </goals>
+                                <configuration>
+                                    <nodeVersion>${node.version}</nodeVersion>
+                                    <npmVersion>${npm.version}</npmVersion>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>npm install</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <configuration>
+                                    <arguments>install</arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>webpack build test</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <phase>test</phase>
+                                <configuration>
+                                    <arguments>run webpack:test</arguments>
+                                    <npmInheritsProxyConfigFromMaven>false</npmInheritsProxyConfigFromMaven>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <id>webpack build prod</id>
+                                <goals>
+                                    <goal>npm</goal>
+                                </goals>
+                                <phase>generate-resources</phase>
+                                <configuration>
+                                    <arguments>run webpack:prod</arguments>
+                                    <environmentVariables>
+                                        <APP_VERSION>${project.version}</APP_VERSION>
+                                    </environmentVariables>
+                                    <npmInheritsProxyConfigFromMaven>false</npmInheritsProxyConfigFromMaven>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>pl.project13.maven</groupId>
+                        <artifactId>git-commit-id-plugin</artifactId>
+                    </plugin>
+                </plugins>
+            </build>
+            <properties>
+                <!-- default Spring profiles -->
+                <spring.profiles.active>aws-ecs${profile.swagger}${profile.tls}</spring.profiles.active>
             </properties>
         </profile>
         <profile>

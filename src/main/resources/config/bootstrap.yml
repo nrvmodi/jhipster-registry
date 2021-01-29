@@ -10,6 +10,17 @@ spring:
     active: dev
     include: composite
   cloud:
+    stream:
+      kafka:
+        binder:
+          brokers: ${KAFKA_URL:kafka:9092}
+    bus:
+      id: ${spring.application.name}:${spring.profiles.active}:${random.uuid}
+      enabled: true
+      refresh:
+        enabled: true
+      kafka:
+        bootstrap-servers: ${KAFKA_URL:kafka:9092}
     config:
       server:
         bootstrap: true
